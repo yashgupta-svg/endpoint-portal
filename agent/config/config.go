@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultAPIURL       = "http://192.168.1.42:3000"
+	defaultAPIURL       = "import.meta.env.VITE_API_URL;"
 	defaultAgentVersion = "1.0.0"
 	defaultInterval     = 10 * time.Second
 	defaultHTTPTimeout  = 5 * time.Second
