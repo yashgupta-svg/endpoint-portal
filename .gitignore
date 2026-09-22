@@ -1,0 +1,15 @@
+# Node
+node_modules/
+
+# Environment files
+.env
+backend/.env
+frontend/.env
+
+# Logs
+npm-debug.log*
+
+# Go endpoint agent
+agent/agent-id
+agent/endpoint-agent
+agent/endpoint-agent.exe
