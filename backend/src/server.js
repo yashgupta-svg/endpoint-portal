@@ -26,12 +26,24 @@ const PORT = config.port;
    CORS
 ===================================================== */
 
+const allowedOrigins = (config.corsOrigin || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin:
-      config.corsOrigin === '*'
-        ? true
-        : config.corsOrigin,
+    origin: (origin, callback) => {
+      // Allow requests with no Origin header
+      // and requests from configured origins.
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS blocked for origin: ${origin}`)
+      );
+    },
     credentials: true,
   })
 );
@@ -118,8 +130,7 @@ app.use('/api', usbEventRoutes);
 app.use((req, res) => {
   res.status(404).json({
     error: 'Not found',
-    message:
-      `Route ${req.originalUrl} was not found`,
+    message: `Route ${req.originalUrl} was not found`,
   });
 });
 
