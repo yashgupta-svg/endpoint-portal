@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-function ThreatEvents() {
+function ThreatEvents({onBack}) {
   const [threats, setThreats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -141,34 +141,41 @@ function ThreatEvents() {
           PAGE HEADING
       ============================================ */}
 
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">
-            SECURITY
-          </p>
+    <div className="page-heading">
+  <div>
+    <button
+      type="button"
+      className="back-button"
+      onClick={onBack}
+    >
+      ← Back
+    </button>
 
-          <h1>
-            Threat Detection
-          </h1>
+    <p className="eyebrow">
+      SECURITY
+    </p>
 
-          <p className="heading-copy">
-            Monitor security threats detected
-            across managed endpoints.
-          </p>
-        </div>
+    <h1>
+      Threat Detection
+    </h1>
 
-        <button
-          type="button"
-          className="refresh-button"
-          onClick={loadThreats}
-          disabled={loading}
-        >
-          {loading
-            ? 'Refreshing...'
-            : 'Refresh'}
-        </button>
-      </div>
+    <p className="heading-copy">
+      Monitor security threats detected
+      across managed endpoints.
+    </p>
+  </div>
 
+  <button
+    type="button"
+    className="refresh-button"
+    onClick={loadThreats}
+    disabled={loading}
+  >
+    {loading
+      ? 'Refreshing...'
+      : 'Refresh'}
+  </button>
+</div>
       {/* ============================================
           ERROR
       ============================================ */}

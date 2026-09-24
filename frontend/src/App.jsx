@@ -508,13 +508,13 @@ const [currentUser, setCurrentUser] =
 /* ===================================================
    THREAT EVENTS
 =================================================== */
-
 if (path === '/threat-events') {
   return (
     <>
       {sessionControls}
-
-      <ThreatEvents />
+      <ThreatEvents
+        onBack={() => navigate('/')}
+      />
     </>
   );
 }

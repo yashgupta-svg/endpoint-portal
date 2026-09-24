@@ -4220,6 +4220,20 @@ h3 {
 }
 
 
+.back-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
 /* =====================================================
    FILTERS
 ===================================================== */
