@@ -13,7 +13,6 @@ function Login({ onLogin }) {
     event.preventDefault();
 
     setError('');
-post
     if (!username.trim() || !password) {
       setError(
         'Username and password are required'

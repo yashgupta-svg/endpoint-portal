@@ -89,11 +89,10 @@ export default function App() {
     localStorage.getItem('theme') || 'dark'
   );
 
-  /*
-   * null  = authentication check in progress
-   * true  = authenticated
-   * false = not authenticated
-   */
+  // // null  = authentication check in progress
+  //   true  = authenticated
+  //   false = not authenticated;
+   
  const [authenticated, setAuthenticated] =
   useState(true);
 
