@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-function ThreatEvents({onBack}) {
+function ThreatEvents({ onBack }) {
   const [threats, setThreats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,13 +13,20 @@ function ThreatEvents({onBack}) {
   const [statusFilter, setStatusFilter] =
     useState('all');
 
+  /* ===================================================
+     LOAD THREATS
+  =================================================== */
+
   async function loadThreats() {
     try {
       setLoading(true);
       setError('');
 
       const response = await fetch(
-        `${API_URL}/api/threat-events`
+        `${API_URL}/api/threat-events`,
+        {
+          credentials: 'include',
+        }
       );
 
       const data = await response.json();
@@ -35,6 +42,7 @@ function ThreatEvents({onBack}) {
           ? data.threats
           : []
       );
+
     } catch (error) {
       console.error(
         'Threat events load failed:',
@@ -42,19 +50,30 @@ function ThreatEvents({onBack}) {
       );
 
       setError(
-        error.message || 'Unable to load threat events'
+        error.message ||
+          'Unable to load threat events'
       );
+
     } finally {
       setLoading(false);
     }
   }
 
+  /* ===================================================
+     INITIAL LOAD
+  =================================================== */
+
   useEffect(() => {
     loadThreats();
   }, []);
 
+  /* ===================================================
+     FILTERED THREATS
+  =================================================== */
+
   const filteredThreats = useMemo(() => {
     return threats.filter((threat) => {
+
       const severityMatch =
         severityFilter === 'all' ||
         threat.severity === severityFilter;
@@ -63,7 +82,10 @@ function ThreatEvents({onBack}) {
         statusFilter === 'all' ||
         threat.status === statusFilter;
 
-      return severityMatch && statusMatch;
+      return (
+        severityMatch &&
+        statusMatch
+      );
     });
   }, [
     threats,
@@ -71,41 +93,63 @@ function ThreatEvents({onBack}) {
     statusFilter,
   ]);
 
+  /* ===================================================
+     COUNTS
+  =================================================== */
+
   const counts = useMemo(() => {
     return {
       critical: threats.filter(
-        (item) => item.severity === 'critical'
+        (item) =>
+          item.severity === 'critical'
       ).length,
 
       high: threats.filter(
-        (item) => item.severity === 'high'
+        (item) =>
+          item.severity === 'high'
       ).length,
 
       medium: threats.filter(
-        (item) => item.severity === 'medium'
+        (item) =>
+          item.severity === 'medium'
       ).length,
 
       low: threats.filter(
-        (item) => item.severity === 'low'
+        (item) =>
+          item.severity === 'low'
       ).length,
     };
   }, [threats]);
+
+  /* ===================================================
+     HELPERS
+  =================================================== */
 
   function formatDate(value) {
     if (!value) {
       return '—';
     }
 
-    return new Date(value).toLocaleString();
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return '—';
+    }
+
+    return date.toLocaleString();
   }
 
   function severityClass(severity) {
-    return `threat-severity threat-severity--${severity}`;
+    return `threat-severity threat-severity--${severity || 'unknown'}`;
   }
 
   function statusClass(status) {
-    return `threat-status threat-status--${status}`;
+    return `threat-status threat-status--${status || 'unknown'}`;
   }
+
+  /* ===================================================
+     UI
+  =================================================== */
 
   return (
     <div className="app-shell">
@@ -115,7 +159,9 @@ function ThreatEvents({onBack}) {
       ============================================ */}
 
       <div className="topbar">
+
         <div className="brand">
+
           <div className="brand-mark">
             <span></span>
           </div>
@@ -123,9 +169,11 @@ function ThreatEvents({onBack}) {
           <span>
             Endpoint <b>Portal</b>
           </span>
+
         </div>
 
         <div className="topbar-meta">
+
           <span className="live-indicator">
             <span></span>
             API connected
@@ -134,54 +182,66 @@ function ThreatEvents({onBack}) {
           <span>
             Threat Monitoring
           </span>
+
         </div>
+
       </div>
 
       {/* ============================================
           PAGE HEADING
       ============================================ */}
 
-    <div className="page-heading">
-  <div>
-    <button
-      type="button"
-      className="back-button"
-      onClick={onBack}
-    >
-      ← Back
-    </button>
+      <div className="page-heading">
 
-    <p className="eyebrow">
-      SECURITY
-    </p>
+        <div>
 
-    <h1>
-      Threat Detection
-    </h1>
+          {/* BACK BUTTON */}
 
-    <p className="heading-copy">
-      Monitor security threats detected
-      across managed endpoints.
-    </p>
-  </div>
+          <button
+            type="button"
+            className="back-button"
+            onClick={onBack}
+          >
+            ← Back
+          </button>
 
-  <button
-    type="button"
-    className="refresh-button"
-    onClick={loadThreats}
-    disabled={loading}
-  >
-    {loading
-      ? 'Refreshing...'
-      : 'Refresh'}
-  </button>
-</div>
+          <p className="eyebrow">
+            SECURITY
+          </p>
+
+          <h1>
+            Threat Detection
+          </h1>
+
+          <p className="heading-copy">
+            Monitor security threats detected
+            across managed endpoints.
+          </p>
+
+        </div>
+
+        {/* REFRESH BUTTON */}
+
+        <button
+          type="button"
+          className="refresh-button"
+          onClick={loadThreats}
+          disabled={loading}
+        >
+          {loading
+            ? 'Refreshing...'
+            : 'Refresh'}
+        </button>
+
+      </div>
+
       {/* ============================================
           ERROR
       ============================================ */}
 
       {error && (
         <div className="alert alert--error">
+
           <strong>
             Threat API error
           </strong>
@@ -189,6 +249,7 @@ function ThreatEvents({onBack}) {
           <span>
             {error}
           </span>
+
         </div>
       )}
 
@@ -198,13 +259,18 @@ function ThreatEvents({onBack}) {
 
       <div className="stats-grid threat-stats-grid">
 
+        {/* CRITICAL */}
+
         <div className="stat-card threat-stat-card threat-stat-card--critical">
+
           <div className="stat-card__topline">
+
             <span className="stat-card__label">
               Critical
             </span>
 
             <span className="stat-card__mark"></span>
+
           </div>
 
           <strong className="stat-card__value">
@@ -214,15 +280,21 @@ function ThreatEvents({onBack}) {
           <span className="stat-card__detail">
             Critical threats
           </span>
+
         </div>
 
+        {/* HIGH */}
+
         <div className="stat-card threat-stat-card threat-stat-card--high">
+
           <div className="stat-card__topline">
+
             <span className="stat-card__label">
               High
             </span>
 
             <span className="stat-card__mark"></span>
+
           </div>
 
           <strong className="stat-card__value">
@@ -232,15 +304,21 @@ function ThreatEvents({onBack}) {
           <span className="stat-card__detail">
             High severity threats
           </span>
+
         </div>
 
+        {/* MEDIUM */}
+
         <div className="stat-card threat-stat-card threat-stat-card--medium">
+
           <div className="stat-card__topline">
+
             <span className="stat-card__label">
               Medium
             </span>
 
             <span className="stat-card__mark"></span>
+
           </div>
 
           <strong className="stat-card__value">
@@ -250,15 +328,21 @@ function ThreatEvents({onBack}) {
           <span className="stat-card__detail">
             Medium severity threats
           </span>
+
         </div>
 
+        {/* LOW */}
+
         <div className="stat-card threat-stat-card threat-stat-card--low">
+
           <div className="stat-card__topline">
+
             <span className="stat-card__label">
               Low
             </span>
 
             <span className="stat-card__mark"></span>
+
           </div>
 
           <strong className="stat-card__value">
@@ -268,6 +352,7 @@ function ThreatEvents({onBack}) {
           <span className="stat-card__detail">
             Low severity threats
           </span>
+
         </div>
 
       </div>
@@ -279,18 +364,27 @@ function ThreatEvents({onBack}) {
       <div className="panel threat-filter-panel">
 
         <div className="panel-heading">
+
           <div>
-            <h2>Threat Filters</h2>
+
+            <h2>
+              Threat Filters
+            </h2>
 
             <span className="updated-label">
               {filteredThreats.length} visible
             </span>
+
           </div>
+
         </div>
 
         <div className="threat-filters">
 
+          {/* SEVERITY */}
+
           <label>
+
             Severity
 
             <select
@@ -301,6 +395,7 @@ function ThreatEvents({onBack}) {
                 )
               }
             >
+
               <option value="all">
                 All Severities
               </option>
@@ -320,10 +415,15 @@ function ThreatEvents({onBack}) {
               <option value="low">
                 Low
               </option>
+
             </select>
+
           </label>
 
+          {/* STATUS */}
+
           <label>
+
             Status
 
             <select
@@ -334,6 +434,7 @@ function ThreatEvents({onBack}) {
                 )
               }
             >
+
               <option value="all">
                 All Status
               </option>
@@ -349,10 +450,13 @@ function ThreatEvents({onBack}) {
               <option value="resolved">
                 Resolved
               </option>
+
             </select>
+
           </label>
 
         </div>
+
       </div>
 
       {/* ============================================
@@ -362,7 +466,9 @@ function ThreatEvents({onBack}) {
       <div className="panel threat-table-panel">
 
         <div className="panel-heading">
+
           <div>
+
             <h2>
               Detected Threats
             </h2>
@@ -370,11 +476,17 @@ function ThreatEvents({onBack}) {
             <span className="updated-label">
               Latest events first
             </span>
+
           </div>
+
         </div>
 
+        {/* LOADING */}
+
         {loading ? (
+
           <div className="threat-empty">
+
             <h2>
               Loading threats...
             </h2>
@@ -382,9 +494,15 @@ function ThreatEvents({onBack}) {
             <p>
               Fetching security events.
             </p>
+
           </div>
+
         ) : filteredThreats.length === 0 ? (
+
+          /* NO THREATS */
+
           <div className="threat-empty">
+
             <h2>
               No threats found
             </h2>
@@ -393,31 +511,68 @@ function ThreatEvents({onBack}) {
               No threat events match the
               current filters.
             </p>
+
           </div>
+
         ) : (
+
+          /* TABLE */
+
           <div className="table-wrap">
 
             <table className="threat-table">
 
               <thead>
+
                 <tr>
-                  <th>Threat</th>
-                  <th>Severity</th>
-                  <th>Endpoint</th>
-                  <th>User</th>
-                  <th>IP</th>
-                  <th>Process</th>
-                  <th>Status</th>
-                  <th>Detected</th>
+
+                  <th>
+                    Threat
+                  </th>
+
+                  <th>
+                    Severity
+                  </th>
+
+                  <th>
+                    Endpoint
+                  </th>
+
+                  <th>
+                    User
+                  </th>
+
+                  <th>
+                    IP
+                  </th>
+
+                  <th>
+                    Process
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Detected
+                  </th>
+
                 </tr>
+
               </thead>
 
               <tbody>
+
                 {filteredThreats.map(
                   (threat) => (
+
                     <tr key={threat.id}>
 
+                      {/* THREAT */}
+
                       <td>
+
                         <strong>
                           {threat.title ||
                             'Unnamed threat'}
@@ -427,49 +582,72 @@ function ThreatEvents({onBack}) {
                           {threat.threat_type ||
                             'unknown'}
                         </small>
+
                       </td>
 
+                      {/* SEVERITY */}
+
                       <td>
+
                         <span
                           className={severityClass(
                             threat.severity
                           )}
                         >
-                          {threat.severity}
+                          {threat.severity ||
+                            'unknown'}
                         </span>
+
                       </td>
 
+                      {/* ENDPOINT */}
+
                       <td>
+
                         <strong>
                           {threat.agent_id ||
                             '—'}
                         </strong>
+
                       </td>
+
+                      {/* USER */}
 
                       <td>
                         {threat.username ||
                           '—'}
                       </td>
 
+                      {/* IP */}
+
                       <td>
                         {threat.ip_address ||
                           '—'}
                       </td>
+
+                      {/* PROCESS */}
 
                       <td>
                         {threat.process_name ||
                           '—'}
                       </td>
 
+                      {/* STATUS */}
+
                       <td>
+
                         <span
                           className={statusClass(
                             threat.status
                           )}
                         >
-                          {threat.status}
+                          {threat.status ||
+                            'unknown'}
                         </span>
+
                       </td>
+
+                      {/* DETECTED */}
 
                       <td>
                         {formatDate(
@@ -478,14 +656,18 @@ function ThreatEvents({onBack}) {
                       </td>
 
                     </tr>
+
                   )
                 )}
+
               </tbody>
 
             </table>
 
           </div>
+
         )}
+
       </div>
 
     </div>
