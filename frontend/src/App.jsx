@@ -14,6 +14,7 @@ import ThreatEvents from './pages/ThreatEvents';
 import './styles.css';
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 /* =====================================================
    THEME TOGGLE
 ===================================================== */
@@ -53,6 +54,7 @@ function SessionControls({
 }) {
   return (
     <div className="session-controls">
+
       {username && (
         <span className="session-user">
           {username}
@@ -72,6 +74,7 @@ function SessionControls({
         onToggle={onToggleTheme}
         inline
       />
+
     </div>
   );
 }
@@ -81,6 +84,7 @@ function SessionControls({
 ===================================================== */
 
 export default function App() {
+
   const [path, setPath] = useState(
     window.location.pathname
   );
@@ -89,23 +93,22 @@ export default function App() {
     localStorage.getItem('theme') || 'dark'
   );
 
-  // // null  = authentication check in progress
-  //   true  = authenticated
-  //   false = not authenticated;
-   
- const [authenticated, setAuthenticated] =
-  useState(true);
+  // null  = authentication check in progress
+  // true  = authenticated
+  // false = not authenticated
 
-const [currentUser, setCurrentUser] =
-  useState({
-    username: 'admin',
-  });
+  const [authenticated, setAuthenticated] =
+    useState(null);
+
+  const [currentUser, setCurrentUser] =
+    useState(null);
 
   /* ===================================================
      BROWSER NAVIGATION
   =================================================== */
 
   useEffect(() => {
+
     const handlePopState = () => {
       setPath(window.location.pathname);
     };
@@ -121,6 +124,7 @@ const [currentUser, setCurrentUser] =
         handlePopState
       );
     };
+
   }, []);
 
   /* ===================================================
@@ -128,6 +132,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   useEffect(() => {
+
     document.documentElement.setAttribute(
       'data-theme',
       theme
@@ -137,14 +142,17 @@ const [currentUser, setCurrentUser] =
       'theme',
       theme
     );
+
   }, [theme]);
 
   function toggleTheme() {
+
     setTheme((currentTheme) =>
       currentTheme === 'dark'
         ? 'light'
         : 'dark'
     );
+
   }
 
   /* ===================================================
@@ -152,6 +160,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   function navigate(nextPath) {
+
     window.history.pushState(
       {},
       '',
@@ -164,6 +173,7 @@ const [currentUser, setCurrentUser] =
       top: 0,
       behavior: 'smooth',
     });
+
   }
 
   /* ===================================================
@@ -171,10 +181,13 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   useEffect(() => {
+
     let cancelled = false;
 
     async function checkAuthentication() {
+
       try {
+
         const response = await fetch(
           `${API_URL}/api/auth/me`,
           {
@@ -193,25 +206,36 @@ const [currentUser, setCurrentUser] =
           response.ok &&
           data.authenticated
         ) {
+
           setAuthenticated(true);
+
           setCurrentUser(
             data.user || null
           );
+
         } else {
+
           setAuthenticated(false);
           setCurrentUser(null);
+
         }
+
       } catch (error) {
+
         console.error(
           'Authentication check failed:',
           error
         );
 
         if (!cancelled) {
+
           setAuthenticated(false);
           setCurrentUser(null);
+
         }
+
       }
+
     }
 
     checkAuthentication();
@@ -219,6 +243,7 @@ const [currentUser, setCurrentUser] =
     return () => {
       cancelled = true;
     };
+
   }, []);
 
   /* ===================================================
@@ -226,10 +251,13 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   function handleLogin(user) {
+
     setCurrentUser(user || null);
+
     setAuthenticated(true);
 
     navigate('/');
+
   }
 
   /* ===================================================
@@ -237,7 +265,9 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   async function handleLogout() {
+
     try {
+
       await fetch(
         `${API_URL}/api/auth/logout`,
         {
@@ -245,13 +275,18 @@ const [currentUser, setCurrentUser] =
           credentials: 'include',
         }
       );
+
     } catch (error) {
+
       console.error(
         'Logout request failed:',
         error
       );
+
     } finally {
+
       setCurrentUser(null);
+
       setAuthenticated(false);
 
       window.history.pushState(
@@ -266,7 +301,9 @@ const [currentUser, setCurrentUser] =
         top: 0,
         behavior: 'smooth',
       });
+
     }
+
   }
 
   /* ===================================================
@@ -274,17 +311,23 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (authenticated === null) {
+
     return (
       <div className="auth-loading-screen">
+
         <div className="auth-loading-card">
+
           <div className="loading-dot"></div>
 
           <span>
             Checking authentication...
           </span>
+
         </div>
+
       </div>
     );
+
   }
 
   /* ===================================================
@@ -292,6 +335,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (!authenticated) {
+
     return (
       <>
         <ThemeToggle
@@ -304,6 +348,7 @@ const [currentUser, setCurrentUser] =
         />
       </>
     );
+
   }
 
   /* ===================================================
@@ -330,6 +375,7 @@ const [currentUser, setCurrentUser] =
   );
 
   if (match) {
+
     return (
       <>
         {sessionControls}
@@ -338,12 +384,15 @@ const [currentUser, setCurrentUser] =
           agentId={decodeURIComponent(
             match[1]
           )}
+
           onBack={() =>
             navigate('/')
           }
+
           onOpenGroups={() =>
             navigate('/groups')
           }
+
           onOpenFileEvents={(agentId) =>
             navigate(
               `/file-events?agent_id=${encodeURIComponent(
@@ -352,12 +401,14 @@ const [currentUser, setCurrentUser] =
             )
           }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
-     GROUP DETAILShh
+     GROUP DETAILS
   =================================================== */
 
   const groupMatch = path.match(
@@ -365,15 +416,18 @@ const [currentUser, setCurrentUser] =
   );
 
   if (groupMatch) {
+
     return (
       <>
         {sessionControls}
 
         <GroupDetails
           groupId={groupMatch[1]}
+
           onBack={() =>
             navigate('/groups')
           }
+
           onOpenAgent={(agentId) =>
             navigate(
               `/agents/${encodeURIComponent(
@@ -382,8 +436,10 @@ const [currentUser, setCurrentUser] =
             )
           }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
@@ -391,6 +447,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (path === '/groups') {
+
     return (
       <>
         {sessionControls}
@@ -399,20 +456,25 @@ const [currentUser, setCurrentUser] =
           onBack={() =>
             navigate('/')
           }
+
           onOpenGroup={(groupId) =>
             navigate(
               `/groups/${groupId}`
             )
           }
+
           onOpenReports={() =>
             navigate('/reports')
           }
+
           onOpenFileEvents={() =>
             navigate('/file-events')
           }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
@@ -420,6 +482,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (path === '/reports') {
+
     return (
       <>
         {sessionControls}
@@ -428,9 +491,11 @@ const [currentUser, setCurrentUser] =
           onBack={() =>
             navigate('/')
           }
+
           onOpenGroups={() =>
             navigate('/groups')
           }
+
           onOpenAgent={(agentId) =>
             navigate(
               `/agents/${encodeURIComponent(
@@ -438,12 +503,15 @@ const [currentUser, setCurrentUser] =
               )}`
             )
           }
+
           onOpenFileEvents={() =>
             navigate('/file-events')
           }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
@@ -451,6 +519,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (path === '/file-events') {
+
     const queryAgentId =
       new URLSearchParams(
         window.location.search
@@ -462,18 +531,23 @@ const [currentUser, setCurrentUser] =
 
         <FileEvents
           initialAgentId={queryAgentId}
+
           onBack={() =>
             navigate('/')
           }
+
           onOpenGroups={() =>
             navigate('/groups')
           }
+
           onOpenReports={() =>
             navigate('/reports')
           }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
@@ -481,6 +555,7 @@ const [currentUser, setCurrentUser] =
   =================================================== */
 
   if (path === '/file-policies') {
+
     return (
       <>
         {sessionControls}
@@ -489,41 +564,52 @@ const [currentUser, setCurrentUser] =
           onBack={() =>
             navigate('/')
           }
+
           onOpenGroups={() =>
             navigate('/groups')
           }
+
           onOpenReports={() =>
             navigate('/reports')
           }
+
           onOpenFileEvents={() =>
             navigate('/file-events')
           }
         />
+
       </>
     );
+
   }
 
+  /* ===================================================
+     THREAT EVENTS
+  =================================================== */
 
+  if (path === '/threat-events') {
 
-/* ===================================================
-   THREAT EVENTS
-=================================================== */
-if (path === '/threat-events') {
-  return (
-    <>
-      {sessionControls}
-      <ThreatEvents
-        onBack={() => navigate('/')}
-      />
-    </>
-  );
-}
+    return (
+      <>
+        {sessionControls}
+
+        <ThreatEvents
+          onBack={() =>
+            navigate('/')
+          }
+        />
+
+      </>
+    );
+
+  }
 
   /* ===================================================
      USB EVENTS
   =================================================== */
 
   if (path === '/usb-events') {
+
     return (
       <>
         {sessionControls}
@@ -532,18 +618,11 @@ if (path === '/threat-events') {
           onBack={() =>
             navigate('/')
           }
-          onOpenGroups={() =>
-            navigate('/groups')
-          }
-          onOpenReports={() =>
-            navigate('/reports')
-          }
-          onOpenFileEvents={() =>
-            navigate('/file-events')
-          }
         />
+
       </>
     );
+
   }
 
   /* ===================================================
@@ -555,6 +634,7 @@ if (path === '/threat-events') {
       {sessionControls}
 
       <Dashboard
+
         onOpenAgent={(agentId) =>
           navigate(
             `/agents/${encodeURIComponent(
@@ -562,24 +642,31 @@ if (path === '/threat-events') {
             )}`
           )
         }
+
         onOpenGroups={() =>
           navigate('/groups')
         }
+
         onOpenReports={() =>
           navigate('/reports')
         }
+
         onOpenFileEvents={() =>
           navigate('/file-events')
         }
+
         onOpenFilePolicies={() =>
           navigate('/file-policies')
         }
+
         onOpenUsbEvents={() =>
           navigate('/usb-events')
         }
+
         onOpenThreatEvents={() =>
           navigate('/threat-events')
         }
+
       />
     </>
   );

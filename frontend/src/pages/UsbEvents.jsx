@@ -12,9 +12,12 @@ function UsbEvents({ onBack }) {
       setLoading(true);
       setError('');
 
-      const response = await fetch(`${API_URL}/api/usb-events`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_URL}/api/usb-events`,
+        {
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch USB events');
@@ -43,6 +46,11 @@ function UsbEvents({ onBack }) {
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+
     return date.toLocaleString();
   };
 
@@ -105,11 +113,13 @@ function UsbEvents({ onBack }) {
         {loading && events.length === 0 ? (
 
           <div className="usb-message-card">
+
             <div className="usb-loading-dot"></div>
 
             <span>
               Loading USB events...
             </span>
+
           </div>
 
         ) : error ? (
@@ -198,7 +208,7 @@ function UsbEvents({ onBack }) {
                         </td>
 
                         <td className="usb-ip-cell">
-                          {event.ip_address}
+                          {event.ip_address || '-'}
                         </td>
 
                         <td className="usb-time-cell">
@@ -207,6 +217,7 @@ function UsbEvents({ onBack }) {
 
                       </tr>
                     );
+
                   })}
 
                 </tbody>
