@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL;;
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 function UsbEvents() {
   const [events, setEvents] = useState([]);
@@ -12,7 +12,7 @@ function UsbEvents() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(`${API_URL}api/usb-events`);
+      const response = await fetch(`${API_URL}/api/usb-events`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch USB events');
