@@ -12,7 +12,7 @@ function UsbEvents() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(`${API_URL}/api/usb-events`);
+      const response = await fetch(`${API_URL}api/usb-events`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch USB events');
