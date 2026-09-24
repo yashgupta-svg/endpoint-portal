@@ -197,6 +197,23 @@ func runAgent(ctx context.Context) {
 	}()
 
 	// ------------------------------------
+	// Threat Detection Monitor
+	// ------------------------------------
+
+	go func() {
+		if err := system.StartThreatMonitor(
+			ctx,
+			client,
+			agentID,
+		); err != nil {
+			logger.Errorf(
+				"Threat monitor stopped: %v",
+				err,
+			)
+		}
+	}()
+
+	// ------------------------------------
 	// Initial Metrics
 	// ------------------------------------
 

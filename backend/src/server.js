@@ -17,6 +17,7 @@ const fileEventRoutes = require('./routes/fileEventRoutes');
 const filePolicyRoutes = require('./routes/filePolicyRoutes');
 const usbEventRoutes = require('./routes/usbEventRoutes');
 const authRoutes = require('./routes/authRoutes');
+const threatEventRoutes = require('./routes/threatEventRoutes');
 
 const app = express();
 
@@ -123,6 +124,8 @@ app.use('/api', filePolicyRoutes);
 
 app.use('/api', usbEventRoutes);
 
+
+app.use('/api', threatEventRoutes);
 /* =====================================================
    404 HANDLER
 ===================================================== */

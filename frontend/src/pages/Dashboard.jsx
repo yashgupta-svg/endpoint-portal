@@ -4,6 +4,8 @@ import Loading from '../components/Loading';
 import StatCard from '../components/StatCard';
 import { fetchAgents } from '../services/api';
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 function formatLastSeen(value) {
   if (!value) return 'Never';
 
@@ -24,12 +26,20 @@ export default function Dashboard({
   onOpenFileEvents,
   onOpenFilePolicies,
   onOpenUsbEvents,
+  onOpenThreatEvents,
 }) {
   const [agents, setAgents] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [isThreatLoading, setIsThreatLoading] = useState(true);
+
   const [error, setError] = useState('');
+  const [threatError, setThreatError] = useState('');
+
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const [threats, setThreats] = useState([]);
 
   async function loadAgents() {
     setIsLoading(true);
@@ -57,8 +67,48 @@ export default function Dashboard({
     }
   }
 
+  async function loadThreats() {
+    setIsThreatLoading(true);
+    setThreatError('');
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/threat-events?limit=500`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Threat API returned HTTP ${response.status}`
+        );
+      }
+
+      setThreats(
+        Array.isArray(data?.threats)
+          ? data.threats
+          : []
+      );
+    } catch (requestError) {
+      setThreatError(requestError.message);
+      setThreats([]);
+    } finally {
+      setIsThreatLoading(false);
+    }
+  }
+
+  async function refreshDashboard() {
+    await Promise.all([
+      loadAgents(),
+      loadThreats(),
+    ]);
+  }
+
   useEffect(() => {
     loadAgents();
+    loadThreats();
   }, []);
 
   const onlineCount = agents.filter(
@@ -66,6 +116,34 @@ export default function Dashboard({
   ).length;
 
   const offlineCount = agents.length - onlineCount;
+
+  const criticalThreats = threats.filter(
+    (threat) => threat.severity === 'critical'
+  ).length;
+
+  const highThreats = threats.filter(
+    (threat) => threat.severity === 'high'
+  ).length;
+
+  const mediumThreats = threats.filter(
+    (threat) => threat.severity === 'medium'
+  ).length;
+
+  const lowThreats = threats.filter(
+    (threat) => threat.severity === 'low'
+  ).length;
+
+  const openThreats = threats.filter(
+    (threat) => threat.status === 'open'
+  ).length;
+
+  const recentThreats = [...threats]
+    .sort(
+      (a, b) =>
+        new Date(b.detected_at || b.created_at).getTime() -
+        new Date(a.detected_at || a.created_at).getTime()
+    )
+    .slice(0, 5);
 
   return (
     <main className="app-shell">
@@ -132,6 +210,13 @@ export default function Dashboard({
           >
             USB Events
           </button>
+
+          <button
+            type="button"
+            onClick={onOpenThreatEvents}
+          >
+            Threat Detection
+          </button>
         </nav>
 
         <div className="topbar-meta">
@@ -168,13 +253,13 @@ export default function Dashboard({
         <button
           className="refresh-button"
           type="button"
-          onClick={loadAgents}
-          disabled={isLoading}
+          onClick={refreshDashboard}
+          disabled={isLoading || isThreatLoading}
         >
           <span
             aria-hidden="true"
             className={
-              isLoading
+              isLoading || isThreatLoading
                 ? 'refresh-icon is-spinning'
                 : 'refresh-icon'
             }
@@ -182,14 +267,14 @@ export default function Dashboard({
             ↻
           </span>
 
-          {isLoading
+          {isLoading || isThreatLoading
             ? 'Refreshing'
             : 'Refresh data'}
         </button>
 
       </section>
 
-      {/* ERROR */}
+      {/* AGENT ERROR */}
       {error && (
         <div
           className="alert"
@@ -212,7 +297,30 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* STATS */}
+      {/* THREAT ERROR */}
+      {threatError && (
+        <div
+          className="alert"
+          role="alert"
+        >
+          <strong>
+            Could not load threat events.
+          </strong>
+
+          <span>
+            {threatError}
+          </span>
+
+          <button
+            type="button"
+            onClick={loadThreats}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ENDPOINT STATS */}
       <section
         className="stats-grid"
         aria-label="Endpoint summary"
@@ -238,6 +346,203 @@ export default function Dashboard({
           detail="Not currently reporting"
           tone="amber"
         />
+
+      </section>
+
+      {/* THREAT OVERVIEW */}
+      <section
+        className="stats-grid"
+        aria-label="Threat summary"
+      >
+
+        <StatCard
+          label="Critical threats"
+          value={isThreatLoading ? '—' : criticalThreats}
+          detail="Critical severity events"
+          tone="amber"
+        />
+
+        <StatCard
+          label="High threats"
+          value={isThreatLoading ? '—' : highThreats}
+          detail="High severity events"
+          tone="amber"
+        />
+
+        <StatCard
+          label="Open threats"
+          value={isThreatLoading ? '—' : openThreats}
+          detail="Threats requiring review"
+          tone="ink"
+        />
+
+      </section>
+
+      {/* THREAT SHORTCUT */}
+      <section className="panel dashboard-threat-panel">
+
+        <div className="panel-heading">
+
+          <div>
+            <p className="section-kicker">
+              Security
+            </p>
+
+            <h2>
+              Threat detection
+            </h2>
+          </div>
+
+          <button
+            className="refresh-button"
+            type="button"
+            onClick={onOpenThreatEvents}
+          >
+            View threat events
+          </button>
+
+        </div>
+
+        <div className="dashboard-threat-overview">
+
+          <div className="dashboard-threat-metric dashboard-threat-metric--critical">
+            <span>Critical</span>
+            <strong>
+              {isThreatLoading ? '—' : criticalThreats}
+            </strong>
+          </div>
+
+          <div className="dashboard-threat-metric dashboard-threat-metric--high">
+            <span>High</span>
+            <strong>
+              {isThreatLoading ? '—' : highThreats}
+            </strong>
+          </div>
+
+          <div className="dashboard-threat-metric dashboard-threat-metric--medium">
+            <span>Medium</span>
+            <strong>
+              {isThreatLoading ? '—' : mediumThreats}
+            </strong>
+          </div>
+
+          <div className="dashboard-threat-metric dashboard-threat-metric--low">
+            <span>Low</span>
+            <strong>
+              {isThreatLoading ? '—' : lowThreats}
+            </strong>
+          </div>
+
+          <div className="dashboard-threat-metric dashboard-threat-metric--total">
+            <span>Total detected</span>
+            <strong>
+              {isThreatLoading ? '—' : threats.length}
+            </strong>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* RECENT THREATS */}
+      <section className="panel dashboard-recent-threats-panel">
+
+        <div className="panel-heading">
+
+          <div>
+            <p className="section-kicker">
+              Latest security events
+            </p>
+
+            <h2>
+              Recent threats
+            </h2>
+          </div>
+
+          <span className="updated-label">
+            Latest events first
+          </span>
+
+        </div>
+
+        {isThreatLoading ? (
+          <Loading />
+        ) : recentThreats.length === 0 ? (
+          <div className="detail-empty">
+            No threat events detected.
+          </div>
+        ) : (
+          <div className="dashboard-recent-threats-wrap">
+
+            <table className="dashboard-recent-threats-table">
+
+              <thead>
+                <tr>
+                  <th>Threat</th>
+                  <th>Severity</th>
+                  <th>Process</th>
+                  <th>User</th>
+                  <th>Status</th>
+                  <th>Detected</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {recentThreats.map((threat) => (
+                  <tr key={threat.id}>
+
+                    <td>
+                      <strong>
+                        {threat.title || 'Unknown threat'}
+                      </strong>
+
+                      <div>
+                        {threat.threat_type || 'Unknown type'}
+                      </div>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`dashboard-threat-severity dashboard-threat-severity--${
+                          threat.severity || 'low'
+                        }`}
+                      >
+                        {threat.severity || 'unknown'}
+                      </span>
+                    </td>
+
+                    <td>
+                      {threat.process_name || 'Unknown'}
+                    </td>
+
+                    <td>
+                      {threat.username || 'Unknown'}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`dashboard-threat-status dashboard-threat-status--${
+                          threat.status || 'open'
+                        }`}
+                      >
+                        {threat.status || 'open'}
+                      </span>
+                    </td>
+
+                    <td>
+                      {formatLastSeen(
+                        threat.detected_at || threat.created_at
+                      )}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+
+          </div>
+        )}
 
       </section>
 

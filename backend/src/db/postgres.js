@@ -27,6 +27,12 @@ pool.on('error', (err) => {
   );
 });
 
+/*
+ * =====================================================
+ * TEST CONNECTION
+ * =====================================================
+ */
+
 async function testConnection() {
   try {
     const result = await pool.query(
@@ -110,6 +116,12 @@ async function ensureDefaultAdmin() {
     return false;
   }
 }
+
+/*
+ * =====================================================
+ * INITIALIZE DATABASE
+ * =====================================================
+ */
 
 async function initializeDatabase() {
   try {
@@ -374,6 +386,64 @@ async function initializeDatabase() {
     `);
 
     // =================================================
+    // Threat Events
+    // =================================================
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS threat_events (
+        id BIGSERIAL PRIMARY KEY,
+
+        agent_id VARCHAR(255) NOT NULL,
+
+        threat_type VARCHAR(100) NOT NULL,
+
+        severity VARCHAR(20) NOT NULL
+          CHECK (
+            severity IN (
+              'low',
+              'medium',
+              'high',
+              'critical'
+            )
+          ),
+
+        title VARCHAR(255) NOT NULL,
+
+        description TEXT,
+
+        file_name TEXT,
+
+        file_path TEXT,
+
+        process_name VARCHAR(255),
+
+        command_line TEXT,
+
+        username VARCHAR(255),
+
+        ip_address VARCHAR(45),
+
+        sha256 VARCHAR(64),
+
+        status VARCHAR(20)
+          NOT NULL DEFAULT 'open'
+          CHECK (
+            status IN (
+              'open',
+              'investigating',
+              'resolved'
+            )
+          ),
+
+        detected_at TIMESTAMPTZ
+          NOT NULL DEFAULT NOW(),
+
+        created_at TIMESTAMPTZ
+          NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // =================================================
     // Indexes
     // =================================================
 
@@ -438,6 +508,26 @@ async function initializeDatabase() {
 
       ON usb_events (timestamp);
 
+      CREATE INDEX IF NOT EXISTS
+        idx_threat_events_agent
+
+      ON threat_events (agent_id);
+
+      CREATE INDEX IF NOT EXISTS
+        idx_threat_events_severity
+
+      ON threat_events (severity);
+
+      CREATE INDEX IF NOT EXISTS
+        idx_threat_events_status
+
+      ON threat_events (status);
+
+      CREATE INDEX IF NOT EXISTS
+        idx_threat_events_detected_at
+
+      ON threat_events (detected_at);
+
       CREATE UNIQUE INDEX IF NOT EXISTS
         idx_file_policies_effective_scope
 
@@ -463,6 +553,12 @@ async function initializeDatabase() {
     return false;
   }
 }
+
+/*
+ * =====================================================
+ * EXPORTS
+ * =====================================================
+ */
 
 module.exports = {
   pool,

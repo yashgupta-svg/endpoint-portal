@@ -9,6 +9,7 @@ import FileEvents from './pages/FileEvents';
 import FilePolicies from './pages/FilePolicies';
 import UsbEvents from './pages/UsbEvents';
 import Login from './pages/Login';
+import ThreatEvents from './pages/ThreatEvents';
 
 import './styles.css';
 
@@ -93,11 +94,13 @@ export default function App() {
    * true  = authenticated
    * false = not authenticated
    */
-  const [authenticated, setAuthenticated] =
-    useState(null);
+ const [authenticated, setAuthenticated] =
+  useState(true);
 
-  const [currentUser, setCurrentUser] =
-    useState(null);
+const [currentUser, setCurrentUser] =
+  useState({
+    username: 'admin',
+  });
 
   /* ===================================================
      BROWSER NAVIGATION
@@ -501,6 +504,22 @@ export default function App() {
     );
   }
 
+
+
+/* ===================================================
+   THREAT EVENTS
+=================================================== */
+
+if (path === '/threat-events') {
+  return (
+    <>
+      {sessionControls}
+
+      <ThreatEvents />
+    </>
+  );
+}
+
   /* ===================================================
      USB EVENTS
   =================================================== */
@@ -558,6 +577,9 @@ export default function App() {
         }
         onOpenUsbEvents={() =>
           navigate('/usb-events')
+        }
+        onOpenThreatEvents={() =>
+          navigate('/threat-events')
         }
       />
     </>

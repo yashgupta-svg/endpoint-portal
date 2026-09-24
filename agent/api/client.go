@@ -57,48 +57,116 @@ type USBEvent struct {
 	EventType string `json:"event_type"`
 }
 
+type ThreatEvent struct {
+	AgentID     string `json:"agent_id"`
+	ThreatType  string `json:"threat_type"`
+	Severity    string `json:"severity"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+
+	FileName string `json:"file_name,omitempty"`
+	FilePath string `json:"file_path,omitempty"`
+
+	ProcessName string `json:"process_name,omitempty"`
+	CommandLine string `json:"command_line,omitempty"`
+
+	Username  string `json:"username,omitempty"`
+	IPAddress string `json:"ip_address,omitempty"`
+
+	SHA256 string `json:"sha256,omitempty"`
+
+	Status string `json:"status,omitempty"`
+
+	DetectedAt string `json:"detected_at,omitempty"`
+}
+
 func NewClient(baseURL string, timeout time.Duration) *Client {
 	return &Client{
-		baseURL:    strings.TrimRight(baseURL, "/"),
-		httpClient: &http.Client{Timeout: timeout},
+		baseURL: strings.TrimRight(baseURL, "/"),
+		httpClient: &http.Client{
+			Timeout: timeout,
+		},
 	}
 }
 
-func (client *Client) RegisterAgent(registration AgentRegistration) error {
-	return client.postJSON("/api/agents/register", registration)
+func (client *Client) RegisterAgent(
+	registration AgentRegistration,
+) error {
+	return client.postJSON(
+		"/api/agents/register",
+		registration,
+	)
 }
 
-func (client *Client) SendMetrics(metrics Metrics) error {
-	return client.postJSON("/api/metrics", metrics)
+func (client *Client) SendMetrics(
+	metrics Metrics,
+) error {
+	return client.postJSON(
+		"/api/metrics",
+		metrics,
+	)
 }
 
-func (client *Client) SendFileEvent(event FileEvent) error {
-	return client.postJSON("/api/file-events", event)
+func (client *Client) SendFileEvent(
+	event FileEvent,
+) error {
+	return client.postJSON(
+		"/api/file-events",
+		event,
+	)
 }
 
-func (client *Client) SendUSBEvent(event USBEvent) error {
-	return client.postJSON("/api/usb-events", event)
+func (client *Client) SendUSBEvent(
+	event USBEvent,
+) error {
+	return client.postJSON(
+		"/api/usb-events",
+		event,
+	)
 }
 
-func (client *Client) GetFilePolicies(agentID string) ([]FilePolicy, error) {
+func (client *Client) SendThreatEvent(
+	event ThreatEvent,
+) error {
+	return client.postJSON(
+		"/api/threat-events",
+		event,
+	)
+}
+
+func (client *Client) GetFilePolicies(
+	agentID string,
+) ([]FilePolicy, error) {
+
 	request, err := http.NewRequest(
 		http.MethodGet,
-		client.baseURL+"/api/agents/"+url.PathEscape(agentID)+"/file-policies",
+		client.baseURL+
+			"/api/agents/"+
+			url.PathEscape(agentID)+
+			"/file-policies",
 		nil,
 	)
+
 	if err != nil {
-		return nil, fmt.Errorf("create policy request: %w", err)
+		return nil, fmt.Errorf(
+			"create policy request: %w",
+			err,
+		)
 	}
 
 	response, err := client.httpClient.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("policy request failed: %w", err)
+		return nil, fmt.Errorf(
+			"policy request failed: %w",
+			err,
+		)
 	}
 
 	defer response.Body.Close()
 
 	if response.StatusCode < http.StatusOK ||
 		response.StatusCode >= http.StatusMultipleChoices {
+
 		return nil, fmt.Errorf(
 			"policy backend returned HTTP %d",
 			response.StatusCode,
@@ -109,41 +177,68 @@ func (client *Client) GetFilePolicies(agentID string) ([]FilePolicy, error) {
 		Policies []FilePolicy `json:"policies"`
 	}
 
-	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
-		return nil, fmt.Errorf("decode policies: %w", err)
+	if err := json.NewDecoder(
+		response.Body,
+	).Decode(&payload); err != nil {
+
+		return nil, fmt.Errorf(
+			"decode policies: %w",
+			err,
+		)
 	}
 
 	return payload.Policies, nil
 }
 
-func (client *Client) postJSON(path string, payload interface{}) error {
+func (client *Client) postJSON(
+	path string,
+	payload interface{},
+) error {
+
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("encode request: %w", err)
+		return fmt.Errorf(
+			"encode request: %w",
+			err,
+		)
 	}
 
-	fmt.Printf("DEBUG JSON: %s\n", string(body))
+	fmt.Printf(
+		"DEBUG JSON: %s\n",
+		string(body),
+	)
 
 	request, err := http.NewRequest(
 		http.MethodPost,
 		client.baseURL+path,
 		bytes.NewReader(body),
 	)
+
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return fmt.Errorf(
+			"create request: %w",
+			err,
+		)
 	}
 
-	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
 
 	response, err := client.httpClient.Do(request)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return fmt.Errorf(
+			"request failed: %w",
+			err,
+		)
 	}
 
 	defer response.Body.Close()
 
 	if response.StatusCode < http.StatusOK ||
 		response.StatusCode >= http.StatusMultipleChoices {
+
 		return fmt.Errorf(
 			"backend returned HTTP %d",
 			response.StatusCode,
