@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-function UsbEvents() {
+function UsbEvents({ onBack }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -12,7 +12,9 @@ function UsbEvents() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(`${API_URL}/api/usb-events`);
+      const response = await fetch(`${API_URL}/api/usb-events`, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch USB events');
@@ -22,7 +24,7 @@ function UsbEvents() {
 
       setEvents(data.events || []);
     } catch (err) {
-      console.error(err);
+      console.error('USB events load failed:', err);
       setError('Unable to load USB events');
     } finally {
       setLoading(false);
@@ -41,7 +43,6 @@ function UsbEvents() {
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
-
     return date.toLocaleString();
   };
 
@@ -51,7 +52,18 @@ function UsbEvents() {
 
         {/* HEADER */}
         <div className="usb-events-header">
+
           <div className="usb-events-title-block">
+
+            {/* BACK BUTTON */}
+            <button
+              type="button"
+              className="usb-back-button"
+              onClick={onBack}
+            >
+              ← Back
+            </button>
+
             <p className="usb-events-eyebrow">
               MONITORING / USB
             </p>
@@ -63,8 +75,10 @@ function UsbEvents() {
             <p className="usb-events-subtitle">
               USB connection and disconnection activity
             </p>
+
           </div>
 
+          {/* REFRESH BUTTON */}
           <button
             type="button"
             className="usb-refresh-button"
@@ -72,17 +86,24 @@ function UsbEvents() {
             disabled={loading}
           >
             <span
-              className={loading ? 'usb-refresh-icon spinning' : 'usb-refresh-icon'}
+              className={
+                loading
+                  ? 'usb-refresh-icon spinning'
+                  : 'usb-refresh-icon'
+              }
             >
               ↻
             </span>
 
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
+
         </div>
 
         {/* CONTENT */}
+
         {loading && events.length === 0 ? (
+
           <div className="usb-message-card">
             <div className="usb-loading-dot"></div>
 
@@ -90,9 +111,14 @@ function UsbEvents() {
               Loading USB events...
             </span>
           </div>
+
         ) : error ? (
+
           <div className="usb-error-card">
-            <strong>Unable to load USB events</strong>
+
+            <strong>
+              Unable to load USB events
+            </strong>
 
             <span>
               {error}
@@ -104,16 +130,25 @@ function UsbEvents() {
             >
               Try again
             </button>
+
           </div>
+
         ) : events.length === 0 ? (
+
           <div className="usb-message-card">
+
             <span>
               No USB events found.
             </span>
+
           </div>
+
         ) : (
+
           <div className="usb-table-card">
+
             <div className="usb-table-wrap">
+
               <table className="usb-events-table">
 
                 <thead>
@@ -133,7 +168,9 @@ function UsbEvents() {
                 </thead>
 
                 <tbody>
+
                   {events.map((event) => {
+
                     const connected =
                       event.event_type === 'connected';
 
@@ -141,6 +178,7 @@ function UsbEvents() {
                       <tr key={event.id}>
 
                         <td>
+
                           <span
                             className={
                               connected
@@ -148,12 +186,15 @@ function UsbEvents() {
                                 : 'usb-event-pill usb-event-pill--disconnected'
                             }
                           >
+
                             <span className="usb-event-dot"></span>
 
                             {connected
                               ? 'USB Connected'
                               : 'USB Disconnected'}
+
                           </span>
+
                         </td>
 
                         <td className="usb-ip-cell">
@@ -167,11 +208,15 @@ function UsbEvents() {
                       </tr>
                     );
                   })}
+
                 </tbody>
 
               </table>
+
             </div>
+
           </div>
+
         )}
 
       </div>
