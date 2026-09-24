@@ -357,7 +357,7 @@ const [currentUser, setCurrentUser] =
   }
 
   /* ===================================================
-     GROUP DETAILS
+     GROUP DETAILShh
   =================================================== */
 
   const groupMatch = path.match(
