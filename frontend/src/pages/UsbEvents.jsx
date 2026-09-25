@@ -63,13 +63,14 @@ function UsbEvents({ onBack }) {
 
           <div className="usb-events-title-block">
 
-            {/* BACK BUTTON */}
+            {/* CLICKABLE ENDPOINT PORTAL */}
             <button
               type="button"
-              className="usb-back-button"
+              className="usb-brand-button"
               onClick={onBack}
+              title="Back to Dashboard"
             >
-              ← Back
+              Endpoint <b>Portal</b>
             </button>
 
             <p className="usb-events-eyebrow">
@@ -109,23 +110,15 @@ function UsbEvents({ onBack }) {
         </div>
 
         {/* CONTENT */}
-
         {loading && events.length === 0 ? (
-
           <div className="usb-message-card">
-
             <div className="usb-loading-dot"></div>
-
             <span>
               Loading USB events...
             </span>
-
           </div>
-
         ) : error ? (
-
           <div className="usb-error-card">
-
             <strong>
               Unable to load USB events
             </strong>
@@ -140,47 +133,29 @@ function UsbEvents({ onBack }) {
             >
               Try again
             </button>
-
           </div>
-
         ) : events.length === 0 ? (
-
           <div className="usb-message-card">
-
             <span>
               No USB events found.
             </span>
-
           </div>
-
         ) : (
-
           <div className="usb-table-card">
-
             <div className="usb-table-wrap">
 
               <table className="usb-events-table">
 
                 <thead>
                   <tr>
-                    <th>
-                      Event
-                    </th>
-
-                    <th>
-                      User IP
-                    </th>
-
-                    <th>
-                      Time
-                    </th>
+                    <th>Event</th>
+                    <th>User IP</th>
+                    <th>Time</th>
                   </tr>
                 </thead>
 
                 <tbody>
-
                   {events.map((event) => {
-
                     const connected =
                       event.event_type === 'connected';
 
@@ -188,7 +163,6 @@ function UsbEvents({ onBack }) {
                       <tr key={event.id}>
 
                         <td>
-
                           <span
                             className={
                               connected
@@ -196,15 +170,12 @@ function UsbEvents({ onBack }) {
                                 : 'usb-event-pill usb-event-pill--disconnected'
                             }
                           >
-
                             <span className="usb-event-dot"></span>
 
                             {connected
                               ? 'USB Connected'
                               : 'USB Disconnected'}
-
                           </span>
-
                         </td>
 
                         <td className="usb-ip-cell">
@@ -217,17 +188,13 @@ function UsbEvents({ onBack }) {
 
                       </tr>
                     );
-
                   })}
-
                 </tbody>
 
               </table>
 
             </div>
-
           </div>
-
         )}
 
       </div>

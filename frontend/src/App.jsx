@@ -586,23 +586,17 @@ export default function App() {
   /* ===================================================
      THREAT EVENTS
   =================================================== */
+if (path === '/threat-events') {
+  return (
+    <>
+      {sessionControls}
 
-  if (path === '/threat-events') {
-
-    return (
-      <>
-        {sessionControls}
-
-        <ThreatEvents
-          onBack={() =>
-            navigate('/')
-          }
-        />
-
-      </>
-    );
-
-  }
+      <ThreatEvents
+        onBack={() => navigate('/')}
+      />
+    </>
+  );
+}
 
   /* ===================================================
      USB EVENTS
