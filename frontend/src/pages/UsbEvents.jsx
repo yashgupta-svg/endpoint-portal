@@ -33,13 +33,15 @@ function UsbEvents({
         }
       );
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         throw new Error(
-          'Failed to fetch USB events'
+          data?.error ||
+            data?.message ||
+            'Failed to fetch USB events'
         );
       }
-
-      const data = await response.json();
 
       setEvents(
         Array.isArray(data?.events)
@@ -96,6 +98,28 @@ function UsbEvents({
   };
 
   /* ===================================================
+     DASHBOARD
+  =================================================== */
+
+  const goToDashboard = () => {
+    if (typeof onBack === 'function') {
+      onBack();
+      return;
+    }
+
+    window.history.pushState({}, '', '/');
+
+    window.dispatchEvent(
+      new PopStateEvent('popstate')
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  /* ===================================================
      UI
   =================================================== */
 
@@ -104,20 +128,21 @@ function UsbEvents({
 
       <div className="usb-events-container">
 
-        {/* ============================================
+        {/* =================================================
             TOP NAVIGATION
-        ============================================ */}
+        ================================================= */}
 
         <header className="topbar">
 
           {/* BRAND */}
+
           <a
             className="brand"
             href="/"
             aria-label="Go to Endpoint Portal dashboard"
             onClick={(event) => {
               event.preventDefault();
-              onBack?.();
+              goToDashboard();
             }}
           >
             <span className="brand-mark">
@@ -130,17 +155,22 @@ function UsbEvents({
           </a>
 
           {/* NAVIGATION */}
+
           <nav
             className="portal-nav"
             aria-label="Primary navigation"
           >
 
+            {/* DASHBOARD */}
+
             <button
               type="button"
-              onClick={onBack}
+              onClick={goToDashboard}
             >
               Dashboard
             </button>
+
+            {/* GROUPS */}
 
             <button
               type="button"
@@ -149,12 +179,16 @@ function UsbEvents({
               Groups
             </button>
 
+            {/* REPORTS */}
+
             <button
               type="button"
               onClick={onOpenReports}
             >
               Reports
             </button>
+
+            {/* FILE EVENTS */}
 
             <button
               type="button"
@@ -163,6 +197,8 @@ function UsbEvents({
               File Events
             </button>
 
+            {/* FILE POLICIES */}
+
             <button
               type="button"
               onClick={onOpenFilePolicies}
@@ -170,12 +206,16 @@ function UsbEvents({
               File Policies
             </button>
 
+            {/* USB EVENTS - ACTIVE */}
+
             <button
               type="button"
               className="is-active"
             >
               USB Events
             </button>
+
+            {/* THREAT DETECTION */}
 
             <button
               type="button"
@@ -187,6 +227,7 @@ function UsbEvents({
           </nav>
 
           {/* STATUS */}
+
           <div className="topbar-meta">
 
             <span className="live-indicator">
@@ -202,11 +243,11 @@ function UsbEvents({
 
         </header>
 
-        {/* ============================================
+        {/* =================================================
             PAGE HEADER
-        ============================================ */}
+        ================================================= */}
 
-        <div className="usb-events-header">
+        <section className="usb-events-header">
 
           <div className="usb-events-title-block">
 
@@ -225,6 +266,7 @@ function UsbEvents({
           </div>
 
           {/* REFRESH */}
+
           <button
             type="button"
             className="usb-refresh-button"
@@ -248,11 +290,11 @@ function UsbEvents({
 
           </button>
 
-        </div>
+        </section>
 
-        {/* ============================================
+        {/* =================================================
             CONTENT
-        ============================================ */}
+        ================================================= */}
 
         {loading && events.length === 0 ? (
 
@@ -260,7 +302,7 @@ function UsbEvents({
 
           <div className="usb-message-card">
 
-            <div className="usb-loading-dot"></div>
+            <div className="usb-loading-dot" />
 
             <span>
               Loading USB events...
@@ -305,7 +347,7 @@ function UsbEvents({
 
         ) : (
 
-          /* TABLE */
+          /* USB TABLE */
 
           <div className="usb-table-card">
 
@@ -340,7 +382,6 @@ function UsbEvents({
                       'connected';
 
                     return (
-
                       <tr
                         key={event.id}
                       >
@@ -369,25 +410,19 @@ function UsbEvents({
 
                         {/* IP */}
 
-                        <td
-                          className="usb-ip-cell"
-                        >
-                          {event.ip_address ||
-                            '-'}
+                        <td className="usb-ip-cell">
+                          {event.ip_address || '-'}
                         </td>
 
                         {/* TIME */}
 
-                        <td
-                          className="usb-time-cell"
-                        >
+                        <td className="usb-time-cell">
                           {formatDate(
                             event.timestamp
                           )}
                         </td>
 
                       </tr>
-
                     );
                   })}
 
