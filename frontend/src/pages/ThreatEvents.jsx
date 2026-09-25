@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(
+  /\/$/,
+  ''
+);
 
 function ThreatEvents({ onBack }) {
   const [threats, setThreats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [severityFilter, setSeverityFilter] =
-    useState('all');
-
-  const [statusFilter, setStatusFilter] =
-    useState('all');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   /* ===================================================
      LOAD THREATS
@@ -33,27 +33,27 @@ function ThreatEvents({ onBack }) {
 
       if (!response.ok) {
         throw new Error(
-          data.error || 'Failed to load threats'
+          data?.error ||
+            data?.message ||
+            'Failed to load threats'
         );
       }
 
       setThreats(
-        Array.isArray(data.threats)
+        Array.isArray(data?.threats)
           ? data.threats
           : []
       );
-
-    } catch (error) {
+    } catch (requestError) {
       console.error(
         'Threat events load failed:',
-        error
+        requestError
       );
 
       setError(
-        error.message ||
+        requestError?.message ||
           'Unable to load threat events'
       );
-
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,6 @@ function ThreatEvents({ onBack }) {
 
   const filteredThreats = useMemo(() => {
     return threats.filter((threat) => {
-
       const severityMatch =
         severityFilter === 'all' ||
         threat.severity === severityFilter;
@@ -82,10 +81,7 @@ function ThreatEvents({ onBack }) {
         statusFilter === 'all' ||
         threat.status === statusFilter;
 
-      return (
-        severityMatch &&
-        statusMatch
-      );
+      return severityMatch && statusMatch;
     });
   }, [
     threats,
@@ -100,23 +96,19 @@ function ThreatEvents({ onBack }) {
   const counts = useMemo(() => {
     return {
       critical: threats.filter(
-        (item) =>
-          item.severity === 'critical'
+        (item) => item.severity === 'critical'
       ).length,
 
       high: threats.filter(
-        (item) =>
-          item.severity === 'high'
+        (item) => item.severity === 'high'
       ).length,
 
       medium: threats.filter(
-        (item) =>
-          item.severity === 'medium'
+        (item) => item.severity === 'medium'
       ).length,
 
       low: threats.filter(
-        (item) =>
-          item.severity === 'low'
+        (item) => item.severity === 'low'
       ).length,
     };
   }, [threats]);
@@ -140,11 +132,34 @@ function ThreatEvents({ onBack }) {
   }
 
   function severityClass(severity) {
-    return `threat-severity threat-severity--${severity || 'unknown'}`;
+    return `threat-severity threat-severity--${
+      severity || 'unknown'
+    }`;
   }
 
   function statusClass(status) {
-    return `threat-status threat-status--${status || 'unknown'}`;
+    return `threat-status threat-status--${
+      status || 'unknown'
+    }`;
+  }
+
+  /* ===================================================
+     DASHBOARD NAVIGATION
+  =================================================== */
+
+  function goToDashboard() {
+    if (typeof onBack === 'function') {
+      onBack();
+      return;
+    }
+
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   }
 
   /* ===================================================
@@ -152,26 +167,34 @@ function ThreatEvents({ onBack }) {
   =================================================== */
 
   return (
-    <div className="app-shell">
+    <main className="app-shell threat-events-page">
 
       {/* ============================================
           TOP BAR
       ============================================ */}
 
-      <div className="topbar">
+      <header className="topbar">
 
-        <div className="brand">
-
-          <div className="brand-mark">
+        {/* CLICKABLE BRAND */}
+        <a
+          className="brand"
+          href="/"
+          aria-label="Go to Endpoint Portal dashboard"
+          onClick={(event) => {
+            event.preventDefault();
+            goToDashboard();
+          }}
+        >
+          <span className="brand-mark">
             <span></span>
-          </div>
+          </span>
 
           <span>
             Endpoint <b>Portal</b>
           </span>
+        </a>
 
-        </div>
-
+        {/* TOP BAR INFO */}
         <div className="topbar-meta">
 
           <span className="live-indicator">
@@ -179,19 +202,19 @@ function ThreatEvents({ onBack }) {
             API connected
           </span>
 
-          <span>
+          <span className="environment-label">
             Threat Monitoring
           </span>
 
         </div>
 
-      </div>
+      </header>
 
       {/* ============================================
           PAGE HEADING
       ============================================ */}
 
-      <div className="page-heading">
+      <section className="page-heading">
 
         <div>
 
@@ -199,8 +222,8 @@ function ThreatEvents({ onBack }) {
 
           <button
             type="button"
-            className="back-button"
-            onClick={onBack}
+            className="back-link"
+            onClick={goToDashboard}
           >
             ← Back
           </button>
@@ -220,7 +243,7 @@ function ThreatEvents({ onBack }) {
 
         </div>
 
-        {/* REFRESH BUTTON */}
+        {/* REFRESH */}
 
         <button
           type="button"
@@ -233,7 +256,7 @@ function ThreatEvents({ onBack }) {
             : 'Refresh'}
         </button>
 
-      </div>
+      </section>
 
       {/* ============================================
           ERROR
@@ -257,12 +280,20 @@ function ThreatEvents({ onBack }) {
           SUMMARY
       ============================================ */}
 
-      <div className="stats-grid threat-stats-grid">
+      <section
+        className="stats-grid threat-stats-grid"
+        aria-label="Threat summary"
+      >
 
         {/* CRITICAL */}
 
-        <div className="stat-card threat-stat-card threat-stat-card--critical">
-
+        <article
+          className="
+            stat-card
+            threat-stat-card
+            threat-stat-card--critical
+          "
+        >
           <div className="stat-card__topline">
 
             <span className="stat-card__label">
@@ -281,12 +312,17 @@ function ThreatEvents({ onBack }) {
             Critical threats
           </span>
 
-        </div>
+        </article>
 
         {/* HIGH */}
 
-        <div className="stat-card threat-stat-card threat-stat-card--high">
-
+        <article
+          className="
+            stat-card
+            threat-stat-card
+            threat-stat-card--high
+          "
+        >
           <div className="stat-card__topline">
 
             <span className="stat-card__label">
@@ -305,12 +341,17 @@ function ThreatEvents({ onBack }) {
             High severity threats
           </span>
 
-        </div>
+        </article>
 
         {/* MEDIUM */}
 
-        <div className="stat-card threat-stat-card threat-stat-card--medium">
-
+        <article
+          className="
+            stat-card
+            threat-stat-card
+            threat-stat-card--medium
+          "
+        >
           <div className="stat-card__topline">
 
             <span className="stat-card__label">
@@ -329,12 +370,17 @@ function ThreatEvents({ onBack }) {
             Medium severity threats
           </span>
 
-        </div>
+        </article>
 
         {/* LOW */}
 
-        <div className="stat-card threat-stat-card threat-stat-card--low">
-
+        <article
+          className="
+            stat-card
+            threat-stat-card
+            threat-stat-card--low
+          "
+        >
           <div className="stat-card__topline">
 
             <span className="stat-card__label">
@@ -353,19 +399,23 @@ function ThreatEvents({ onBack }) {
             Low severity threats
           </span>
 
-        </div>
+        </article>
 
-      </div>
+      </section>
 
       {/* ============================================
           FILTERS
       ============================================ */}
 
-      <div className="panel threat-filter-panel">
+      <section className="panel threat-filter-panel">
 
         <div className="panel-heading">
 
           <div>
+
+            <p className="section-kicker">
+              Security events
+            </p>
 
             <h2>
               Threat Filters
@@ -384,7 +434,6 @@ function ThreatEvents({ onBack }) {
           {/* SEVERITY */}
 
           <label>
-
             Severity
 
             <select
@@ -395,7 +444,6 @@ function ThreatEvents({ onBack }) {
                 )
               }
             >
-
               <option value="all">
                 All Severities
               </option>
@@ -415,15 +463,12 @@ function ThreatEvents({ onBack }) {
               <option value="low">
                 Low
               </option>
-
             </select>
-
           </label>
 
           {/* STATUS */}
 
           <label>
-
             Status
 
             <select
@@ -434,7 +479,6 @@ function ThreatEvents({ onBack }) {
                 )
               }
             >
-
               <option value="all">
                 All Status
               </option>
@@ -450,24 +494,26 @@ function ThreatEvents({ onBack }) {
               <option value="resolved">
                 Resolved
               </option>
-
             </select>
-
           </label>
 
         </div>
 
-      </div>
+      </section>
 
       {/* ============================================
           THREAT TABLE
       ============================================ */}
 
-      <div className="panel threat-table-panel">
+      <section className="panel threat-table-panel">
 
         <div className="panel-heading">
 
           <div>
+
+            <p className="section-kicker">
+              Latest security events
+            </p>
 
             <h2>
               Detected Threats
@@ -484,7 +530,6 @@ function ThreatEvents({ onBack }) {
         {/* LOADING */}
 
         {loading ? (
-
           <div className="threat-empty">
 
             <h2>
@@ -496,7 +541,6 @@ function ThreatEvents({ onBack }) {
             </p>
 
           </div>
-
         ) : filteredThreats.length === 0 ? (
 
           /* NO THREATS */
@@ -513,7 +557,6 @@ function ThreatEvents({ onBack }) {
             </p>
 
           </div>
-
         ) : (
 
           /* TABLE */
@@ -523,7 +566,6 @@ function ThreatEvents({ onBack }) {
             <table className="threat-table">
 
               <thead>
-
                 <tr>
 
                   <th>
@@ -559,14 +601,12 @@ function ThreatEvents({ onBack }) {
                   </th>
 
                 </tr>
-
               </thead>
 
               <tbody>
 
                 {filteredThreats.map(
                   (threat) => (
-
                     <tr key={threat.id}>
 
                       {/* THREAT */}
@@ -651,12 +691,12 @@ function ThreatEvents({ onBack }) {
 
                       <td>
                         {formatDate(
-                          threat.detected_at
+                          threat.detected_at ||
+                            threat.created_at
                         )}
                       </td>
 
                     </tr>
-
                   )
                 )}
 
@@ -665,12 +705,11 @@ function ThreatEvents({ onBack }) {
             </table>
 
           </div>
-
         )}
 
-      </div>
+      </section>
 
-    </div>
+    </main>
   );
 }
 

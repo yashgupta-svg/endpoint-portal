@@ -601,24 +601,26 @@ if (path === '/threat-events') {
   /* ===================================================
      USB EVENTS
   =================================================== */
-
-  if (path === '/usb-events') {
-
-    return (
-      <>
-        {sessionControls}
-
-        <UsbEvents
-          onBack={() =>
-            navigate('/')
-          }
-        />
-
-      </>
-    );
-
+<UsbEvents
+  onBack={() =>
+    navigate('/')
   }
-
+  onOpenGroups={() =>
+    navigate('/groups')
+  }
+  onOpenReports={() =>
+    navigate('/reports')
+  }
+  onOpenFileEvents={() =>
+    navigate('/file-events')
+  }
+  onOpenFilePolicies={() =>
+    navigate('/file-policies')
+  }
+  onOpenThreatEvents={() =>
+    navigate('/threat-events')
+  }
+/>
   /* ===================================================
      DASHBOARD
   =================================================== */
